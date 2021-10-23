@@ -10,8 +10,8 @@ time_table_drop = "DROP TABLE IF EXISTS time"
 
 songplay_table_create = (""" CREATE TABLE IF NOT EXISTS songplays
                                 (songplay_id serial PRIMARY KEY,
-                                start_time bigint,
-                                userid text,
+                                start_time timestamp NOT NULL,
+                                user_id int NOT NULL,
                                 level text,
                                 song_id text,
                                 artist_id text, 
@@ -49,7 +49,7 @@ artist_table_create = (""" CREATE TABLE IF NOT EXISTS artists (
 """)
 
 time_table_create = (""" CREATE TABLE IF NOT EXISTS time (
-                            start_time bigint,
+                            start_time timestamp,
                             hour int,
                             day int,
                             week int,
@@ -61,14 +61,14 @@ time_table_create = (""" CREATE TABLE IF NOT EXISTS time (
 
 # INSERT RECORDS
 
-songplay_table_insert = (""" INSERT INTO songplays (start_time, userid, level, song_id,  artist_id, session_id, location, user_agent)
+songplay_table_insert = (""" INSERT INTO songplays (start_time, user_id, level, song_id,  artist_id, session_id, location, user_agent)
                             VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
                             ON CONFLICT (songplay_id) DO NOTHING
 """)
 
 user_table_insert = (""" INSERT INTO users (user_id,first_name,last_name,gender,level)
                             VALUES (%s, %s, %s, %s, %s)
-                            ON CONFLICT (user_id) DO NOTHING
+                            ON CONFLICT (user_id) DO UPDATE SET level = excluded.level
 """)
 
 song_table_insert = ("""INSERT INTO songs (song_id, title, artist_id, year, duration)
