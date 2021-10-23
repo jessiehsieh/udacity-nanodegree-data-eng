@@ -24,18 +24,16 @@ def process_song_file(cur, filepath):
     song_data = df[columns]
     for idx, row in song_data.iterrows():
         cur.execute(song_table_insert, tuple(row[columns]))
-        conn.commit()
 
     # insert artist record
     columns = ['artist_id','artist_name', 'artist_location', 'artist_latitude', 'artist_longitude']
     artist_data = df[columns]
     for idx, row in artist_data.iterrows():
         cur.execute(artist_table_insert, tuple(row[columns]))
-        conn.commit()
 
 def process_log_file(cur, filepath):
     # open log file
-    df = pd.read_json(get_files(filepath), lines=True)
+    df = pd.read_json(filepath, lines=True)
 
     # filter by NextSong action
     df = df.query("page=='NextSong'")
@@ -50,16 +48,15 @@ def process_log_file(cur, filepath):
 
     for i, row in time_df.iterrows():
         cur.execute(time_table_insert, list(row))
-        conn.commit()
 
     # load user table
-    user_df = df.loc[df['userId']!='',
+    df.loc[:,'userId'] = df['userId'].astype(str)
+    user_df = df.loc[(df['userId']!=''),
                  ['userId','firstName','lastName','gender','level']].drop_duplicates()
 
     # insert user records
     for i, row in user_df.iterrows():
         cur.execute(user_table_insert, row)
-        conn.commit()
 
     # insert songplay records
     for index, row in df.iterrows():
@@ -74,7 +71,7 @@ def process_log_file(cur, filepath):
             songid, artistid = None, None
 
         # insert songplay record
-        songplay_data = (row.ts, row.userId, row.level, songid, artistid, sessionId, location, userAgent)
+        songplay_data = (row.ts, row.userId, row.level, songid, artistid, row.sessionId, row.location, row.userAgent)
         cur.execute(songplay_table_insert, songplay_data)
 
 
@@ -93,7 +90,6 @@ def process_data(cur, conn, filepath, func):
     # iterate over files and process
     for i, datafile in enumerate(all_files, 1):
         func(cur, datafile)
-        conn.commit()
         print('{}/{} files processed.'.format(i, num_files))
 
 
@@ -103,7 +99,8 @@ def main():
 
     process_data(cur, conn, filepath='data/song_data', func=process_song_file)
     process_data(cur, conn, filepath='data/log_data', func=process_log_file)
-
+    
+    conn.commit()
     conn.close()
 
 
