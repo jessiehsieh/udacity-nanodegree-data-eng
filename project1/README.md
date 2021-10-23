@@ -34,4 +34,19 @@ start_time, hour, day, week, month, year, weekday
 An ETL job is defined in *etl.py* which opens each song/log json file, read as a Pandas DataFrame, then parse the relevant columns in each tables.
 Data selection of non-duplicated records and non-empty ID values were applied for dimension tables. Transformation of columns into string types were also performed for user_id in the users table. 
 The job inserts into each table row by row, which is acceptable for small amount of data, but not for bulky data. 
-In summary, this is a job that works fine but not optimized.
+In general, this is a ETL job that works fine but not optimized.
+
+
+## Repository Contents
+
+- data (dir): contains all data files
+- create_tables.py: python script to delete existing table and create tables with queries sitting in sql_queries.py
+- etl.ipynb: notebook to visualize the effect of each code snippets
+- etl.py: python script to run ETL job, read from data/ and write into postgreSQL tables.
+- sql_queries.py: python file containing all standard queries
+- test.ipynb: notebook file to visualize postgreSQL table contexts.
+
+## Bash commands to run ETL Job
+
+1. python3 create_tables.py
+2. python3 etl.py
