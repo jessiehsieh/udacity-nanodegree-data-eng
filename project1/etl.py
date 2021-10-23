@@ -4,44 +4,62 @@ import psycopg2
 import pandas as pd
 from sql_queries import *
 
+def get_files(filepath):
+    all_files = []
+    for root, dirs, files in os.walk(filepath):
+        files = glob.glob(os.path.join(root,'*.json'))
+        for f in files :
+            all_files.append(os.path.abspath(f))
+    
+    return all_files
+
 
 def process_song_file(cur, filepath):
     # open song file
-    df = 
+    df = pd.read_json(filepath, lines=True)
+    df = df.where(pd.notnull(df), None)
 
     # insert song record
-    song_data = 
-    cur.execute(song_table_insert, song_data)
-    
-    # insert artist record
-    artist_data = 
-    cur.execute(artist_table_insert, artist_data)
+    columns = ['song_id', 'title', 'artist_id', 'year', 'duration']
+    song_data = df[columns]
+    for idx, row in song_data.iterrows():
+        cur.execute(song_table_insert, tuple(row[columns]))
+        conn.commit()
 
+    # insert artist record
+    columns = ['artist_id','artist_name', 'artist_location', 'artist_latitude', 'artist_longitude']
+    artist_data = df[columns]
+    for idx, row in artist_data.iterrows():
+        cur.execute(artist_table_insert, tuple(row[columns]))
+        conn.commit()
 
 def process_log_file(cur, filepath):
     # open log file
-    df = 
+    df = pd.read_json(get_files(filepath), lines=True)
 
     # filter by NextSong action
-    df = 
+    df = df.query("page=='NextSong'")
 
     # convert timestamp column to datetime
-    t = 
+    t = pd.to_datetime(df['ts'], unit='ms')
     
     # insert time data records
-    time_data = 
-    column_labels = 
-    time_df = 
+    time_data = (df.ts.astype(int), t.dt.hour, t.dt.day, t.dt.week, t.dt.month, t.dt.year, t.dt.weekday)
+    column_labels = ('start_time', 'hour','day','week','month','year','weekday')
+    time_df = pd.DataFrame({col: time_data[idx] for idx, col in enumerate(column_labels)})
 
     for i, row in time_df.iterrows():
         cur.execute(time_table_insert, list(row))
+        conn.commit()
 
     # load user table
-    user_df = 
+    user_df = df.loc[df['userId']!='',
+                 ['userId','firstName','lastName','gender','level']].drop_duplicates()
 
     # insert user records
     for i, row in user_df.iterrows():
         cur.execute(user_table_insert, row)
+        conn.commit()
 
     # insert songplay records
     for index, row in df.iterrows():
