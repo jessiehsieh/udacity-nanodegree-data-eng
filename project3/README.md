@@ -39,11 +39,9 @@ In general, this is a ETL job that works fine but not optimized.
 
 ## Repository Contents
 
-- data (dir): contains all data files
 - create_tables.py: python script to delete existing table and create tables with queries sitting in sql_queries.py
-- etl.py: python script to run ETL job, read from data/ and write into postgreSQL tables.
+- etl.py: python script to run ETL job, read from data/ and write into Redshift tables.
 - sql_queries.py: python file containing all standard queries
-- test.ipynb: notebook file to visualize postgreSQL table contexts.
 
 ## Bash commands to run ETL Job
 
